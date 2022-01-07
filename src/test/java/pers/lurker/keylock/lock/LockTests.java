@@ -1,6 +1,5 @@
-package pers.lurker.keylock;
+package pers.lurker.keylock.lock;
 
-import pers.lurker.keylock.lock.KeyLock;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
@@ -20,7 +19,7 @@ public class LockTests {
 
         CompletableFuture.allOf(IntStream.range(0, executeThreads)
                 .mapToObj(i -> CompletableFuture.runAsync(() -> {
-                            KeyLock<String> lock = KeyLock.getLock("test" + i%3);
+                            KeyLock<String> lock = KeyLock.getLock("test" + i % 3);
                             lock.lock();
                             log.info("{} start", Thread.currentThread().getName());
                             try {

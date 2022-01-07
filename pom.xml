@@ -17,7 +17,8 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.12</version>
+            <version>1.18.14</version>
+            <scope>provided</scope>
         </dependency>
         <!--这个依赖直接包含了 logback-core 以及 slf4j-api的依赖-->
         <dependency>
