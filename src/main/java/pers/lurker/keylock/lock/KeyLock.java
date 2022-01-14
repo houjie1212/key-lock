@@ -11,24 +11,34 @@ public class KeyLock<T> implements Lock {
     private final static ConcurrentHashMap<Object, LockAndCounter> locksMap = new ConcurrentHashMap<>();
 
     private final T key;
+    private final boolean fair;
 
-    private KeyLock(T lockKey) {
+    private KeyLock(T lockKey, boolean fair) {
         this.key = lockKey;
+        this.fair = fair;
     }
 
     public static <T> KeyLock<T> getLock(T lockKey) {
-        return new KeyLock<>(lockKey);
+        return new KeyLock<>(lockKey, false);
+    }
+
+    public static <T> KeyLock<T> getLock(T lockKey, boolean fair) {
+        return new KeyLock<>(lockKey, fair);
     }
 
     private static class LockAndCounter {
-        private final Lock lock = new ReentrantLock();
+        private final Lock lock;
         private final AtomicInteger counter = new AtomicInteger(0);
+
+        public LockAndCounter(boolean fair) {
+            lock = new ReentrantLock(fair);
+        }
     }
 
     private LockAndCounter getLock() {
         return locksMap.compute(key, (key, lockAndCounterInner) -> {
             if (lockAndCounterInner == null) {
-                lockAndCounterInner = new LockAndCounter();
+                lockAndCounterInner = new LockAndCounter(fair);
             }
             lockAndCounterInner.counter.incrementAndGet();
             return lockAndCounterInner;
