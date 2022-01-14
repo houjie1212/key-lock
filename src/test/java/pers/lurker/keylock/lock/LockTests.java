@@ -19,7 +19,7 @@ public class LockTests {
 
         CompletableFuture.allOf(IntStream.range(0, executeThreads)
                 .mapToObj(i -> CompletableFuture.runAsync(() -> {
-                            KeyLock<String> lock = KeyLock.getLock("test" + i % 3, true);
+                            KeyLock<Integer> lock = KeyLock.getLock(i * 1000 % 3, i % 2 == 0);
                             lock.lock();
                             log.info("{} start", Thread.currentThread().getName());
                             try {

@@ -8,7 +8,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class KeyLock<T> implements Lock {
-    private final static ConcurrentHashMap<Object, LockAndCounter> locksMap = new ConcurrentHashMap<>();
+    private final static ConcurrentHashMap<Object, LockAndCounter> nonfairLocksMap = new ConcurrentHashMap<>();
+    private final static ConcurrentHashMap<Object, LockAndCounter> fairLocksMap = new ConcurrentHashMap<>();
 
     private final T key;
     private final boolean fair;
@@ -36,7 +37,7 @@ public class KeyLock<T> implements Lock {
     }
 
     private LockAndCounter getLock() {
-        return locksMap.compute(key, (key, lockAndCounterInner) -> {
+        return (fair ? fairLocksMap : nonfairLocksMap).compute(key, (key, lockAndCounterInner) -> {
             if (lockAndCounterInner == null) {
                 lockAndCounterInner = new LockAndCounter(fair);
             }
@@ -47,7 +48,7 @@ public class KeyLock<T> implements Lock {
 
     private void cleanupLock(LockAndCounter lockAndCounterOuter) {
         if (lockAndCounterOuter.counter.decrementAndGet() == 0) {
-            locksMap.compute(key, (key, lockAndCounterInner) -> {
+            (fair ? fairLocksMap : nonfairLocksMap).compute(key, (key, lockAndCounterInner) -> {
                 if (lockAndCounterInner == null || lockAndCounterInner.counter.get() == 0) {
                     return null;
                 }
@@ -64,7 +65,7 @@ public class KeyLock<T> implements Lock {
 
     @Override
     public void unlock() {
-        LockAndCounter lockAndCounter = locksMap.get(key);
+        LockAndCounter lockAndCounter = (fair ? fairLocksMap : nonfairLocksMap).get(key);
         lockAndCounter.lock.unlock();
         cleanupLock(lockAndCounter);
     }
@@ -114,7 +115,7 @@ public class KeyLock<T> implements Lock {
 
     @Override
     public Condition newCondition() {
-        LockAndCounter lockAndCounter = locksMap.get(key);
+        LockAndCounter lockAndCounter = (fair ? fairLocksMap : nonfairLocksMap).get(key);
         return lockAndCounter.lock.newCondition();
     }
 }
